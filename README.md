@@ -6,6 +6,9 @@ The original files (DBF tables and the dBASE .PRG programs) live
 unmodified in `orig/`. `convert.py` converts the tables to `hddb.sqlite`
 and per-table CSV files in `csv/`.
 
+The browser search interface is served at
+**<https://vzekc.github.io/hddb/>**.
+
 ## Converting
 
 ```
