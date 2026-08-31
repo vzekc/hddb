@@ -19,7 +19,7 @@ the Python 3 standard library.
 python3 build_html.py
 ```
 
-Regenerates `hddb.html`, a standalone browser search interface with the
+Regenerates `index.html`, a standalone browser search interface with the
 data embedded — open it directly in any browser, no server needed. The
 search tolerates missing hyphens and one typo per word ("conner cp 340"
 finds the CP-340), and the BIOS type tables are on a second tab.

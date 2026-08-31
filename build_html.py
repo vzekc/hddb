@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate hddb.html, a standalone browser search interface for hddb.sqlite.
+"""Generate index.html, a standalone browser search interface for hddb.sqlite.
 
 Embeds the diskbank and biostyp tables as JSON in a single HTML file with a
 fuzzy search over manufacturer + model. Run convert.py first.
@@ -10,7 +10,7 @@ import pathlib
 import sqlite3
 
 HERE = pathlib.Path(__file__).parent
-OUT = HERE / "hddb.html"
+OUT = HERE / "index.html"
 
 DISK_COLS = ["produzent", "typ", "cap", "seek", "inch", "cyl", "hds", "sec",
              "cyl_l", "hds_l", "sec_l", "pre", "lnd", "controller", "mtbf",
