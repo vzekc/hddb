@@ -1,0 +1,121 @@
+clear
+@ 0,0 say "                                                                   "
+@ 1,0 say "                                                                   "
+set color to g/n
+@ 2,10 to 4,63 double
+    set color to w/n
+    @ 3,12 say "Festplattendatenbank  V1.25 A.Schneider 11/93,5/95"
+
+set color to g/n
+@ 2,10 TO 18,63 double
+set color to w/n
+
+auswahl= " "
+     @ 6,12 SAY "(H) Hersteller suchen"
+     @ 7,12 SAY "(A) Alle Hersteller zeigen"
+     @ 9,12 SAY "(T) Plattentyp suchen"    
+     @ 10,12 SAY "(G) Plattengr”sse berechnen"
+     @ 11,12 SAY "(N) Nach Gr”áe suchen"
+     @ 13,12 say "(B) Biostypen zeigen "
+     @ 14,12 say "(I) Biostyp suchen (IDE)"
+     
+     
+     @ 6,48 SAY "(1) Legende " 
+     @ 7,48 SAY "(2) Info 1"   
+     @ 8,48 SAY "(3) Info 2"   
+     @ 9,48 SAY "(4) Info 3"   
+     @ 10,48 SAY "(5) Info 4"        
+
+     @ 16,12 SAY "(E) = Ende  " 
+     @ $,$ GET auswahl
+     read
+     aw = UPPER (auswahl)
+     auswahl= aw   
+ *-------------------------------------------------------------
+DO CASE
+    CASE auswahl ="H"
+     do produ
+return
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="T"
+   DO suchtyp
+return
+
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="A"
+   DO zeigalle
+return
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="N"
+   DO suchsize
+return
+
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="I"
+   DO IDE
+return
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="B"
+   DO Bios
+   return
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="G"
+   DO size 
+return
+
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="1"
+   DO legende
+return
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="2"
+   DO kabel1
+return
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="3"
+   DO kabel2
+return
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="4"
+   DO Kabel3
+return
+
+*-----------------------------------------------------------------ÿ
+Do CASE
+   CASE auswahl="5"
+   DO Kabel4
+return
+
+
+*-----------------------------------------------------------------ÿ  
+DO CASE
+    CASE auswahl="E"
+quit
+return
+*-----------------------------------------------------------------ÿ
+DO CASE
+    CASE auswahl=""
+return
+
+otherwise 
+       return
+
+endcase
+
+
+
+
+
+
+
+
