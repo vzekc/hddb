@@ -21,6 +21,7 @@
   <section id="pane-disks">
     <div class="controls">
       <input id="q" type="search" placeholder="Suche, z.B. »conner cp 340« oder »quantum bigfoot«…" autofocus>
+      <select id="fherst"><option value="">Alle Hersteller</option></select>
       <span class="toolbar" id="toolbar">
         <button id="btn-new" hidden>Neuer Eintrag</button>
         <button id="btn-import" hidden>Import…</button>
@@ -31,13 +32,22 @@
     <div id="count"></div>
     <div class="tablewrap"><table>
       <thead><tr>
-        <th>Hersteller</th><th>Modell</th><th>Typ</th>
-        <th class="num">MB</th><th>Zoll</th>
-        <th class="num">Zyl</th><th class="num">Köpfe</th><th class="num">Sek</th>
+        <th data-col="produzent">Hersteller<span class="sortmark"></span></th>
+        <th data-col="modell">Modell<span class="sortmark"></span></th>
+        <th data-col="typ">Typ<span class="sortmark"></span></th>
+        <th class="num" data-col="mb">MB<span class="sortmark"></span></th>
+        <th data-col="inch">Zoll<span class="sortmark"></span></th>
+        <th class="num" data-col="cyl">Zyl<span class="sortmark"></span></th>
+        <th class="num" data-col="hds">Köpfe<span class="sortmark"></span></th>
+        <th class="num" data-col="sec">Sek<span class="sortmark"></span></th>
         <th>CHS logisch</th>
-        <th>Interface</th><th class="num">Seek&nbsp;ms</th>
-        <th class="num">Precomp</th><th class="num">Landezone</th>
-        <th class="num">MTBF&nbsp;kh</th><th>Notiz</th><th>Geändert von</th>
+        <th data-col="controller">Interface<span class="sortmark"></span></th>
+        <th class="num" data-col="seek">Seek&nbsp;ms<span class="sortmark"></span></th>
+        <th class="num" data-col="pre">Precomp<span class="sortmark"></span></th>
+        <th class="num" data-col="lnd">Landezone<span class="sortmark"></span></th>
+        <th class="num" data-col="mtbf">MTBF&nbsp;kh<span class="sortmark"></span></th>
+        <th data-col="notiz">Notiz<span class="sortmark"></span></th>
+        <th data-col="updated_by_name">Geändert von<span class="sortmark"></span></th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table></div>

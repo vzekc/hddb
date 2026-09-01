@@ -21,7 +21,7 @@ const FIELDS = [
   { name: 'controller', label: 'Interface', type: 'text' },
   { name: 'mtbf', label: 'MTBF (1000 h)', type: 'int' },
   { name: 'lift', label: 'Autopark', type: 'text' },
-  { name: 'date', label: 'Datum', type: 'text' },
+  { name: 'date', label: 'Datum', type: 'text', noform: true },
   { name: 'notiz', label: 'Notiz', type: 'text', wide: true },
 ];
 const FIELD_LABEL = Object.fromEntries(FIELDS.map(f => [f.name, f.label]));
@@ -40,6 +40,7 @@ let DISKS = [];
 let BIOS = [];
 let KEYS = [];
 let USER = null;
+let PRODUCERS = [];
 
 // ---------------------------------------------------------------------------
 // Fuzzy search (squashed substring match, one edit tolerated per word)
@@ -86,11 +87,12 @@ function scoreKey(key, qSquash, qTokens) {
   return total + (ordered ? 200 : 0) - key.length;
 }
 
-function search(query) {
+function search(query, producer) {
   const qSquash = squash(query);
   const qTokens = query.toLowerCase().split(/\s+/).map(squash).filter(Boolean);
   const out = [];
   for (let i = 0; i < DISKS.length; i++) {
+    if (producer && DISKS[i].produzent !== producer) continue;
     if (!qSquash) { out.push([0, i]); continue; }
     const s = scoreKey(KEYS[i], qSquash, qTokens);
     if (s >= 0) out.push([s, i]);
@@ -121,6 +123,56 @@ function highlight(text, qTokens) {
 }
 
 // ---------------------------------------------------------------------------
+// Column sorting: a click cycles a column ascending → descending → off;
+// clicking further columns appends them as additional sort keys.
+
+let SORT = [];  // [{ col, dir }] in priority order
+
+const SORT_VALUE = {
+  mb: d => mbOf(d) === '' ? null : mbOf(d),
+};
+const NUMERIC_COLS = new Set(['mb', 'cyl', 'hds', 'sec', 'seek', 'pre',
+                              'lnd', 'mtbf']);
+
+function compareDisks(a, b) {
+  for (const { col, dir } of SORT) {
+    const get = SORT_VALUE[col] ?? (d => d[col]);
+    let va = get(a), vb = get(b);
+    if (va == null && vb == null) continue;
+    if (va == null) return 1;   // empty values always sort last
+    if (vb == null) return -1;
+    let c;
+    if (NUMERIC_COLS.has(col)) {
+      c = va - vb;
+    } else {
+      c = String(va).localeCompare(String(vb), 'de', { numeric: true });
+    }
+    if (c) return dir === 'desc' ? -c : c;
+  }
+  return 0;
+}
+
+function updateSortMarks() {
+  document.querySelectorAll('#pane-disks th[data-col]').forEach(th => {
+    const pos = SORT.findIndex(s => s.col === th.dataset.col);
+    th.querySelector('.sortmark').textContent = pos < 0 ? ''
+      : (SORT[pos].dir === 'asc' ? '▲' : '▼') +
+        (SORT.length > 1 ? pos + 1 : '');
+  });
+}
+
+document.querySelector('#pane-disks thead').addEventListener('click', ev => {
+  const th = ev.target.closest('th[data-col]');
+  if (!th) return;
+  const col = th.dataset.col;
+  const cur = SORT.find(s => s.col === col);
+  if (!cur) SORT.push({ col, dir: 'asc' });
+  else if (cur.dir === 'asc') cur.dir = 'desc';
+  else SORT = SORT.filter(s => s.col !== col);
+  renderDisks();
+});
+
+// ---------------------------------------------------------------------------
 // Disk table
 
 const LIMIT = 300;
@@ -136,10 +188,15 @@ const chsLog = d => (d.cyl_l || d.hds_l || d.sec_l)
 function renderDisks() {
   const query = $('q').value.trim();
   const qTokens = query.toLowerCase().split(/\s+/).map(squash).filter(Boolean);
-  const idxs = search(query);
+  const idxs = search(query, $('fherst').value);
+  if (SORT.length) idxs.sort((a, b) => compareDisks(DISKS[a], DISKS[b]));
+  updateSortMarks();
   const shown = idxs.slice(0, LIMIT);
-  $('count').textContent = idxs.length === DISKS.length
-    ? `${DISKS.length} Laufwerke` : `${idxs.length} Treffer`;
+  $('count').innerHTML = (idxs.length === DISKS.length
+    ? `${DISKS.length} Laufwerke` : `${idxs.length} Treffer`) +
+    (SORT.length ? '<a id="clearsort">Sortierung aufheben</a>' : '');
+  if (SORT.length)
+    $('clearsort').onclick = () => { SORT = []; renderDisks(); };
   $('rows').innerHTML = shown.map(i => {
     const d = DISKS[i];
     return `<tr data-id="${d.id}">
@@ -196,9 +253,19 @@ function renderBios() {
 
 let dialogDisk = null;   // null = new entry
 
+const NEW_PRODUCER = '__neu__';
+
 function fieldInput(f, value) {
   const attrs = USER ? '' : 'readonly';
   const val = esc(value ?? '');
+  if (f.name === 'produzent' && USER)
+    return `<label>${f.label}
+      <select name="produzent" required>
+        <option value="" disabled ${value ? '' : 'selected'} hidden>– wählen –</option>
+        ${PRODUCERS.map(p => `<option ${p === value ? 'selected' : ''}>${esc(p)}</option>`).join('')}
+        <option value="${NEW_PRODUCER}">Neuer Hersteller…</option>
+      </select>
+      <input type="text" name="produzent_neu" placeholder="Name des Herstellers" hidden></label>`;
   if (f.name === 'notiz')
     return `<label class="wide">${f.label}
       <input type="text" name="${f.name}" value="${val}" ${attrs}></label>`;
@@ -208,12 +275,20 @@ function fieldInput(f, value) {
     <input type="${type}" name="${f.name}" value="${val}" ${attrs} ${req}></label>`;
 }
 
+$('dlg-fields').addEventListener('change', ev => {
+  if (ev.target.name !== 'produzent') return;
+  const neu = $('disk-form').elements.produzent_neu;
+  neu.hidden = ev.target.value !== NEW_PRODUCER;
+  neu.required = !neu.hidden;
+  if (!neu.hidden) neu.focus();
+});
+
 function openDiskDialog(disk) {
   dialogDisk = disk;
   $('dlg-title').textContent = disk
     ? `${disk.produzent} ${disk.typ}` : 'Neuer Eintrag';
-  $('dlg-fields').innerHTML =
-    FIELDS.map(f => fieldInput(f, disk?.[f.name])).join('');
+  $('dlg-fields').innerHTML = FIELDS.filter(f => !f.noform)
+    .map(f => fieldInput(f, disk?.[f.name])).join('');
   $('btn-save').hidden = !USER;
   $('btn-delete').hidden = !USER || !disk;
   const hist = $('dlg-history');
@@ -259,8 +334,10 @@ $('disk-form').addEventListener('submit', async ev => {
   ev.preventDefault();
   if (!USER) { $('dlg-disk').close(); return; }
   const data = {};
-  for (const f of FIELDS)
+  for (const f of FIELDS.filter(f => !f.noform))
     data[f.name] = $('disk-form').elements[f.name].value;
+  if (data.produzent === NEW_PRODUCER)
+    data.produzent = $('disk-form').elements.produzent_neu.value;
   const url = dialogDisk ? `auth/disk.php?id=${dialogDisk.id}` : 'auth/disk.php';
   const res = await fetch(url, {
     method: dialogDisk ? 'PUT' : 'POST',
@@ -454,6 +531,13 @@ async function reloadDisks() {
   DISKS = data.disks;
   BIOS = data.bios;
   buildKeys();
+  PRODUCERS = [...new Set(DISKS.map(d => d.produzent).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'de'));
+  const fherst = $('fherst');
+  const selected = fherst.value;
+  fherst.innerHTML = '<option value="">Alle Hersteller</option>' +
+    PRODUCERS.map(p => `<option>${esc(p)}</option>`).join('');
+  if (PRODUCERS.includes(selected)) fherst.value = selected;
   renderDisks();
   if (!$('vendor').options.length) {
     $('vendor').innerHTML = [...new Set(BIOS.map(r => r.bios))].sort()
@@ -486,6 +570,7 @@ async function checkLogin() {
 }
 
 $('q').addEventListener('input', renderDisks);
+$('fherst').addEventListener('change', renderDisks);
 $('vendor').addEventListener('change', renderBios);
 
 (async () => {

@@ -11,10 +11,14 @@ $user = current_user();
 $method = $_SERVER['REQUEST_METHOD'];
 $id = (int)($_GET['id'] ?? 0);
 
+// The edit form does not carry the historic entry date: a new entry gets
+// today's date, an update keeps the stored one.
 try {
 switch ($method) {
 case 'POST':
-    $data = normalize_disk(read_json_body());
+    $body = read_json_body();
+    $body['date'] ??= date('Y-m-d');
+    $data = normalize_disk($body);
     db()->exec('BEGIN IMMEDIATE');
     $id = insert_disk($data, $user);
     log_revision($id, 'create', $user, null, $data);
@@ -26,7 +30,9 @@ case 'PUT':
     if (!$row) {
         json_error('Eintrag nicht gefunden', 404);
     }
-    $data = normalize_disk(read_json_body());
+    $body = read_json_body();
+    $body['date'] ??= $row['date'];
+    $data = normalize_disk($body);
     $old = disk_data($row);
     if (!disk_diff($old, $data)) {
         json_response($row);  // nothing changed, nothing logged
