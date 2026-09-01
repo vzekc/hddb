@@ -133,9 +133,13 @@ def main():
 
     for table, (fn, memo_map) in tables.items():
         fields, rows = read_dbf(ORIG / fn, memo_map)
-        for r in rows:  # 65535 is the sentinel for "no precompensation"
+        for r in rows:
+            # 65535 is the sentinel for "no precompensation"
             if r.get("PRE") == 65535:
                 r["PRE"] = None
+            # the 3-character dBASE field truncated the 5.25" form factor
+            if r.get("INCH") == "5.2":
+                r["INCH"] = "5.25"
         if table in ("bios", "biostyp", "secall"):
             rows = dedupe_ignoring_date(rows)
         colnames = [name.lower() for name, *_ in fields]
