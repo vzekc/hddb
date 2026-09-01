@@ -560,7 +560,13 @@ async function checkLogin() {
     }
   } catch { /* offline etc. — stay read-only */ }
   if (USER) {
-    $('account').innerHTML = `<span>Angemeldet als <b>${esc(USER.name)}</b></span>`;
+    $('account').innerHTML =
+      `<span>Angemeldet als <b>${esc(USER.name)}</b></span>` +
+      '<button id="btn-logout">Abmelden</button>';
+    $('btn-logout').onclick = () => {
+      location.href = 'oidc/redirect?logout=' +
+        encodeURIComponent(location.origin + location.pathname);
+    };
     $('btn-new').hidden = false;
     $('btn-import').hidden = false;
   } else {
