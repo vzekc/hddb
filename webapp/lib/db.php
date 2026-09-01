@@ -6,10 +6,12 @@ const DISK_TEXT_FIELDS = ['produzent', 'modell', 'typ', 'inch', 'controller',
                           'lift', 'date', 'notiz'];
 const DISK_INT_FIELDS = ['cap', 'seek', 'cyl', 'hds', 'sec', 'cyl_l',
                          'hds_l', 'sec_l', 'pre', 'lnd', 'mtbf'];
+const DISK_FLOAT_FIELDS = ['hoehe'];
 
 function disk_fields(): array
 {
-    return array_merge(DISK_TEXT_FIELDS, DISK_INT_FIELDS);
+    return array_merge(DISK_TEXT_FIELDS, DISK_INT_FIELDS,
+                       DISK_FLOAT_FIELDS);
 }
 
 function data_dir(): string
@@ -101,6 +103,19 @@ function normalize_disk(array $input): array
             throw new InvalidArgumentException("Feld $f muss eine Zahl sein");
         }
     }
+    foreach (DISK_FLOAT_FIELDS as $f) {
+        $v = $input[$f] ?? null;
+        if (is_string($v)) {
+            $v = str_replace(',', '.', trim($v));  // 12,7 → 12.7
+        }
+        if ($v === null || $v === '') {
+            $out[$f] = null;
+        } elseif (is_numeric($v)) {
+            $out[$f] = (float)$v;
+        } else {
+            throw new InvalidArgumentException("Feld $f muss eine Zahl sein");
+        }
+    }
     if ($out['produzent'] === null || $out['typ'] === null) {
         throw new InvalidArgumentException(
             'Hersteller und Typ sind Pflichtfelder');
@@ -159,6 +174,9 @@ function write_disk(int $id, array $data, array $user): void
     foreach (DISK_INT_FIELDS as $f) {
         $stmt->bindValue(":$f", $data[$f], SQLITE3_INTEGER);
     }
+    foreach (DISK_FLOAT_FIELDS as $f) {
+        $stmt->bindValue(":$f", $data[$f], SQLITE3_FLOAT);
+    }
     $stmt->bindValue(':updated_at', now_iso());
     $stmt->bindValue(':updated_by', $user['id'], SQLITE3_INTEGER);
     $stmt->bindValue(':updated_by_name', $user['name']);
@@ -180,11 +198,32 @@ function insert_disk(array $data, array $user): int
     foreach (DISK_INT_FIELDS as $f) {
         $stmt->bindValue(":$f", $data[$f], SQLITE3_INTEGER);
     }
+    foreach (DISK_FLOAT_FIELDS as $f) {
+        $stmt->bindValue(":$f", $data[$f], SQLITE3_FLOAT);
+    }
     $stmt->bindValue(':updated_at', now_iso());
     $stmt->bindValue(':updated_by', $user['id'], SQLITE3_INTEGER);
     $stmt->bindValue(':updated_by_name', $user['name']);
     $stmt->execute();
     return db()->lastInsertRowID();
+}
+
+// The dBASE inch field combined the form-factor diameter with height
+// codes (F/FH = full height, H/HH = half height, S = slimline) in three
+// characters.  Splits such a value into a clean diameter and the height
+// in millimeters; returns [inch, hoehe] with hoehe null when the source
+// does not state a height.
+function decode_inch(?string $inch): array
+{
+    return match ($inch) {
+        '5F', 'FH5' => ['5.25', 82.6],
+        '5H', 'HH5', '5HH' => ['5.25', 41.3],
+        '3H' => ['3.5', 41.3],
+        '3S' => ['3.5', 25.4],
+        '5', '5.2' => ['5.25', null],
+        '3' => ['3.5', null],
+        default => [$inch, null],
+    };
 }
 
 // Field-by-field difference between two normalized data arrays.

@@ -41,6 +41,7 @@ $insert = $db->prepare(
 $rows = $seed->query('SELECT * FROM diskbank');
 $n = 0;
 while ($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+    [$row['inch'], $row['hoehe']] = decode_inch($row['inch']);
     foreach ($fields as $f) {
         // the seed has no modell column; other missing fields stay null,
         // except the required name fields, which become empty strings

@@ -10,6 +10,7 @@ const FIELDS = [
   { name: 'cap', label: 'Kapazität (MB)', type: 'int' },
   { name: 'seek', label: 'Seek (ms)', type: 'int' },
   { name: 'inch', label: 'Zoll', type: 'text' },
+  { name: 'hoehe', label: 'Höhe (mm)', type: 'float' },
   { name: 'cyl', label: 'Zylinder', type: 'int' },
   { name: 'hds', label: 'Köpfe', type: 'int' },
   { name: 'sec', label: 'Sektoren/Spur', type: 'int' },
@@ -131,8 +132,8 @@ let SORT = [];  // [{ col, dir }] in priority order
 const SORT_VALUE = {
   mb: d => mbOf(d) === '' ? null : mbOf(d),
 };
-const NUMERIC_COLS = new Set(['mb', 'cyl', 'hds', 'sec', 'seek', 'pre',
-                              'lnd', 'mtbf']);
+const NUMERIC_COLS = new Set(['mb', 'hoehe', 'cyl', 'hds', 'sec', 'seek',
+                              'pre', 'lnd', 'mtbf']);
 
 function compareDisks(a, b) {
   for (const { col, dir } of SORT) {
@@ -185,6 +186,14 @@ function mbOf(d) {
 const chsLog = d => (d.cyl_l || d.hds_l || d.sec_l)
   ? `${d.cyl_l ?? ''}/${d.hds_l ?? ''}/${d.sec_l ?? ''}` : '';
 
+// Standard heights get their trade names; anything else shows as mm.
+function heightLabel(h) {
+  if (h == null) return '';
+  if (Math.abs(h - 82.6) < 1) return 'Full Height';
+  if (Math.abs(h - 41.3) < 1) return 'Half Height';
+  return `${h} mm`;
+}
+
 function renderDisks() {
   const query = $('q').value.trim();
   const qTokens = query.toLowerCase().split(/\s+/).map(squash).filter(Boolean);
@@ -205,6 +214,7 @@ function renderDisks() {
       <td>${highlight(d.typ, qTokens)}</td>
       <td class="num">${mbOf(d)}</td>
       <td>${esc(d.inch)}</td>
+      <td title="${d.hoehe ?? ''}${d.hoehe != null ? ' mm' : ''}">${heightLabel(d.hoehe)}</td>
       <td class="num">${d.cyl ?? ''}</td>
       <td class="num">${d.hds ?? ''}</td>
       <td class="num">${d.sec ?? ''}</td>
@@ -269,10 +279,11 @@ function fieldInput(f, value) {
   if (f.name === 'notiz')
     return `<label class="wide">${f.label}
       <input type="text" name="${f.name}" value="${val}" ${attrs}></label>`;
-  const type = f.type === 'int' ? 'number' : 'text';
+  const type = f.type === 'text' ? 'text' : 'number';
+  const step = f.type === 'float' ? 'step="any"' : '';
   const req = f.required && USER ? 'required' : '';
   return `<label>${f.label}
-    <input type="${type}" name="${f.name}" value="${val}" ${attrs} ${req}></label>`;
+    <input type="${type}" ${step} name="${f.name}" value="${val}" ${attrs} ${req}></label>`;
 }
 
 $('dlg-fields').addEventListener('change', ev => {

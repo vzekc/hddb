@@ -8,7 +8,9 @@ CREATE TABLE disk (
     typ TEXT NOT NULL,
     cap INTEGER,              -- advertised capacity in MB
     seek INTEGER,             -- average seek time in ms
-    inch TEXT,                -- form factor
+    inch TEXT,                -- form factor diameter (5.25, 3.5, ...)
+    hoehe REAL,               -- drive height in mm (82.6 = full height,
+                              -- 41.3 = half height)
     cyl INTEGER, hds INTEGER, sec INTEGER,        -- physical geometry
     cyl_l INTEGER, hds_l INTEGER, sec_l INTEGER,  -- logical geometry
     pre INTEGER,              -- write precompensation start cylinder
