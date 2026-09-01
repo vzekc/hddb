@@ -6,8 +6,9 @@ The original files (DBF tables and the dBASE .PRG programs) live
 unmodified in `orig/`. `convert.py` converts the tables to `hddb.sqlite`
 and per-table CSV files in `csv/`.
 
-The browser search interface is served at
-**<https://vzekc.github.io/hddb/>**.
+The browser interface is served at
+**<https://classic-computing.org/hddb/>** (the former GitHub Pages site
+redirects there; the repo root `index.html` is that redirect page).
 
 ## Web application (webapp/)
 
@@ -46,16 +47,9 @@ python3 convert.py
 ```
 
 Regenerates `hddb.sqlite` and `csv/` from `orig/`. No dependencies beyond
-the Python 3 standard library.
-
-```
-python3 build_html.py
-```
-
-Regenerates `index.html`, a standalone browser search interface with the
-data embedded — open it directly in any browser, no server needed. The
-search tolerates missing hyphens and one typo per word ("conner cp 340"
-finds the CP-340), and the BIOS type tables are on a second tab.
+the Python 3 standard library. The search in the web application
+tolerates missing hyphens and one typo per word ("conner cp 340" finds
+the CP-340).
 
 ## Tables
 
