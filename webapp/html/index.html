@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Festplattendatenbank</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Festplattendatenbank <small id="subtitle">V1.25 · A. Schneider 1993–1995</small></h1>
+  <div class="account" id="account"></div>
+</header>
+<main>
+  <div class="tabs" role="tablist">
+    <button id="tab-disks" role="tab" aria-selected="true">Festplatten</button>
+    <button id="tab-bios" role="tab" aria-selected="false">BIOS-Typen</button>
+    <button id="tab-history" role="tab" aria-selected="false">Änderungen</button>
+  </div>
+
+  <section id="pane-disks">
+    <div class="controls">
+      <input id="q" type="search" placeholder="Suche, z.B. »conner cp 340« oder »quantum bigfoot«…" autofocus>
+      <span class="toolbar" id="toolbar">
+        <button id="btn-new" hidden>Neuer Eintrag</button>
+        <button id="btn-import" hidden>Import…</button>
+        <button id="btn-export-csv">Export CSV</button>
+        <button id="btn-export-xlsx">Export Excel</button>
+      </span>
+    </div>
+    <div id="count"></div>
+    <div class="tablewrap"><table>
+      <thead><tr>
+        <th>Hersteller</th><th>Modell</th><th>Typ</th>
+        <th class="num">MB</th><th>Zoll</th>
+        <th class="num">Zyl</th><th class="num">Köpfe</th><th class="num">Sek</th>
+        <th>CHS logisch</th>
+        <th>Interface</th><th class="num">Seek&nbsp;ms</th>
+        <th class="num">Precomp</th><th class="num">Landezone</th>
+        <th class="num">MTBF&nbsp;kh</th><th>Notiz</th><th>Geändert von</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <div class="more" id="more" hidden></div>
+  </section>
+
+  <section id="pane-bios" hidden>
+    <div class="controls">
+      <select id="vendor"></select>
+    </div>
+    <div class="tablewrap narrow"><table>
+      <thead><tr>
+        <th>BIOS</th><th class="num">Typ</th>
+        <th class="num">Zylinder</th><th class="num">Köpfe</th><th class="num">Sek/Spur</th>
+        <th class="num">Precomp</th><th class="num">Landezone</th>
+        <th class="num">MB</th>
+      </tr></thead>
+      <tbody id="biosrows"></tbody>
+    </table></div>
+  </section>
+
+  <section id="pane-history" hidden>
+    <div id="historylist"></div>
+    <div id="historyend" class="more">Lade…</div>
+  </section>
+</main>
+<footer>
+  Konvertiert aus der dBASE-III-Originaldatenbank. MB = Zylinder × Köpfe × Sektoren × 512 / 2²⁰.
+  Suche toleriert fehlende Bindestriche und einen Tippfehler pro Wort.
+</footer>
+
+<dialog id="dlg-disk">
+  <form method="dialog" id="disk-form">
+    <h2 id="dlg-title"></h2>
+    <div class="fields" id="dlg-fields"></div>
+    <div class="dlg-history" id="dlg-history"></div>
+    <div class="buttons">
+      <button type="button" id="btn-delete" class="danger" hidden>Löschen</button>
+      <span class="spacer"></span>
+      <button type="button" id="btn-cancel">Schließen</button>
+      <button type="submit" id="btn-save" class="primary" hidden>Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-import">
+  <h2>Import</h2>
+  <div id="import-summary"></div>
+  <div class="tablewrap" id="import-details"></div>
+  <div class="buttons">
+    <span class="spacer"></span>
+    <button type="button" id="btn-import-cancel">Abbrechen</button>
+    <button type="button" id="btn-import-apply" class="primary">Anwenden</button>
+  </div>
+</dialog>
+
+<input type="file" id="import-file" accept=".csv,.xlsx,.xls" hidden>
+
+<script src="app.js"></script>
+</body>
+</html>

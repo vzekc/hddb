@@ -1,0 +1,23 @@
+<?php
+// Optional display-name resolver, deployed as lib/username.php ON THE
+// SERVER ONLY (never commit a copy with credentials).  Used when the
+// forum's OIDC userinfo does not carry a usable nickname claim: maps the
+// numeric forum user id to the forum username via a read-only MySQL
+// account on the local forum database.
+
+function resolve_username(int $userId): ?string
+{
+    static $pdo = null;
+    if ($pdo === null) {
+        try {
+            $pdo = new mysqli('localhost', 'hddb_ro', '<password>', 'forum');
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+    $stmt = $pdo->prepare('SELECT username FROM wcf1_user WHERE userID = ?');
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_row();
+    return $row[0] ?? null;
+}

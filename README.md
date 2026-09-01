@@ -9,6 +9,36 @@ and per-table CSV files in `csv/`.
 The browser search interface is served at
 **<https://vzekc.github.io/hddb/>**.
 
+## Web application (webapp/)
+
+The editable version for club members, deployed to
+<https://classic-computing.org/hddb/>: static UI (`webapp/html/`) with a
+PHP backend on Apache and its own SQLite database. Reading is public;
+create/update/delete, CSV/Excel import with a confirmed preview, and the
+change history live behind mod_auth_openidc against the forum
+(`Require claim groups:Vereinsmitglieder`). Every change is recorded in a
+`revision` table (who, when, field-level diff) and browsable per entry
+and globally with endless scrolling.
+
+- Local development: `webapp/dev/run.sh` — PHP dev server on port 8080
+  with a scratch database seeded from `hddb.sqlite` and a faked OIDC
+  identity (`DEV_USER_ID`/`DEV_USER_NAME`).
+- Deployment: `./deploy.sh` rsyncs `webapp/{html,lib,bin}` to
+  `/var/www/hddb/` on classic-computing.de and seeds
+  `/var/www/hddb/data/hddb.sqlite` on first deploy (never overwritten
+  afterwards).
+- One-time server setup (root): create the OAuth2 client `hddb` in the
+  forum ACP (scopes openid, nickname, groups; redirect URI
+  `https://classic-computing.org/hddb/oidc/redirect`), put its secret and
+  an `OIDCCryptoPassphrase` into root-only
+  `/etc/apache2/oidc-hddb-secrets.conf`, include `webapp/apache/hddb.conf`
+  from the website vhost, `apachectl configtest`, reload.
+- If the forum's userinfo delivers no usable nickname claim, deploy
+  `webapp/lib/username.php.example` as `/var/www/hddb/lib/username.php`
+  with read-only forum-database credentials to resolve display names.
+- Excel handling (both directions) happens in the browser via SheetJS;
+  the server only speaks JSON and CSV.
+
 ## Converting
 
 ```
