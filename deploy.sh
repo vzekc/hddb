@@ -18,6 +18,9 @@ cd "$(dirname "$0")"
 HOST=classic-computing.de
 TARGET=/var/www/hddb
 
+# the seed database is generated, not committed
+[ -f hddb.sqlite ] || python3 convert.py
+
 ssh "$HOST" "sudo install -d -o \$USER $TARGET $TARGET/data"
 rsync -av --delete webapp/html webapp/lib webapp/bin "$HOST:$TARGET/"
 rsync -av hddb.sqlite "$HOST:$TARGET/seed.sqlite"

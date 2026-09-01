@@ -1,0 +1,35 @@
+name: Mirror live data
+
+# Fetches the public CSV export of the live application into
+# export/hddb.csv and commits it when the data changed, so the git
+# history doubles as a readable change log of the database.
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch export
+        run: |
+          mkdir -p export
+          curl -sf https://classic-computing.org/hddb/api/export.php -o export/hddb.csv
+          head -1 export/hddb.csv | grep -q 'id,produzent' || {
+            echo "unexpected export content"; exit 1; }
+      - name: Commit when changed
+        run: |
+          git add export/hddb.csv
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Mirror live data ($(date -u +%F))"
+            git push
+          fi

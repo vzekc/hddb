@@ -6,6 +6,7 @@ cd "$(dirname "$0")"
 
 export HDDB_DATA_DIR="${HDDB_DATA_DIR:-$PWD/data}"
 if [ ! -f "$HDDB_DATA_DIR/hddb.sqlite" ]; then
+    [ -f ../../hddb.sqlite ] || (cd ../.. && python3 convert.py)
     php ../bin/init-db.php ../../hddb.sqlite
 fi
 

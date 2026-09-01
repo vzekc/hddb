@@ -47,7 +47,12 @@ python3 convert.py
 ```
 
 Regenerates `hddb.sqlite` and `csv/` from `orig/`. No dependencies beyond
-the Python 3 standard library. The search in the web application
+the Python 3 standard library. `hddb.sqlite` is generated on demand and
+not committed (the live application's database diverges from it as
+members edit); the current live data is mirrored to `export/hddb.csv`
+nightly by the "Mirror live data" GitHub Actions workflow, so its git
+history reads as a change log. `csv/` remains the snapshot of the
+original dBASE conversion. The search in the web application
 tolerates missing hyphens and one typo per word ("conner cp 340" finds
 the CP-340).
 
